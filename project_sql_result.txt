@@ -1,0 +1,86 @@
+/* create trips_amount variable based on company name, for November 15-16 */
+
+SELECT
+    cabs.company_name,
+    COUNT(trip_id) AS trips_amount
+FROM
+    cabs
+    INNER JOIN trips ON trips.cab_id = cabs.cab_id
+WHERE
+    CAST(start_ts AS date) BETWEEN '2017-11-15' AND '2017-11-16'
+GROUP BY
+    company_name
+ORDER BY
+    trips_amount DESC
+
+/* group the top two performing companies, Flash Cab and Taxi Affiliation Services */
+/* then group the rest of the companies in the 'other' category */
+/* select data over the first seven days in November */
+
+SELECT
+    CASE 
+        WHEN company_name = 'Flash Cab' THEN 'Flash Cab' 
+        WHEN company_name = 'Taxi Affiliation Services' THEN 'Taxi Affiliation Services' 
+        ELSE 'Other' 
+    END AS company,
+    COUNT(trips.trip_id) as trips_amount                
+FROM 
+    cabs
+    INNER JOIN trips ON trips.cab_id = cabs.cab_id
+WHERE 
+    CAST(trips.start_ts AS date) BETWEEN '2017-11-01' AND '2017-11-07'
+GROUP BY 
+    company
+ORDER BY 
+    trips_amount DESC;
+
+/* retrieve neighborhood IDs for Loop and O'Hare */
+
+SELECT
+    *
+FROM
+    neighborhoods
+WHERE
+    name LIKE '%Hare' OR 
+    name LIKE 'Loop'
+
+/* retrieve weather conditions for each hour, mark them as 'good' or 'bad' */
+
+SELECT
+    start_ts,
+    CASE 
+        WHEN 
+            weather_records.description LIKE '%rain%' THEN(
+                'Bad'
+        )
+        WHEN
+            weather_records.description LIKE '%storm%' THEN(
+                'Bad'
+            )
+        WHEN
+            weather_records.description LIKE '%storm%' THEN(
+                'Bad'
+            )
+        ELSE (
+            'Good'
+        ) END AS weather_conditions,
+        duration_seconds
+
+/* retrieve the table for rides that started in Loop and ended at O'Hare */
+/* table contains start_ts, weather_conditions, and duration_seconds */
+
+/* this segment is exported as project_sql_result_07 */
+
+FROM
+    trips
+    JOIN weather_records ON weather_records.ts = trips.start_ts
+WHERE
+    pickup_location_id = 50
+    AND
+    dropoff_location_id = 63
+    AND
+    EXTRACT(dow from trips.start_ts) = 6
+    AND
+    description IS NOT NULL
+ORDER BY
+    trip_id
